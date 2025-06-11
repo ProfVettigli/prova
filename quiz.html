@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Interattivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .quiz-container {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        .question h2 {
+            color: #555;
+            margin-bottom: 15px;
+        }
+
+        .options label {
+            display: block;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .options label:hover {
+            background-color: #dcdcdc;
+        }
+
+        .options input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e2f0cb;
+            border: 1px solid #c8e6c9;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 1.1em;
+            display: none; /* Inizialmente nascosto */
+        }
+
+        .result.correct {
+            background-color: #d4edda;
+            color: #155724;
+            border-color: #c3e6cb;
+        }
+
+        .result.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-color: #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Quiz di Conoscenza Generale</h1>
+
+        <div class="question" id="question1">
+            <h2>1. Qual è la capitale dell'Italia?</h2>
+            <div class="options">
+                <label>
+                    <input type="radio" name="q1" value="a"> Milano
+                </label>
+                <label>
+                    <input type="radio" name="q1" value="b"> Roma
+                </label>
+                <label>
+                    <input type="radio" name="q1" value="c"> Napoli
+                </label>
+            </div>
+        </div>
+
+        <div class="question" id="question2">
+            <h2>2. Chi ha scritto "La Divina Commedia"?</h2>
+            <div class="options">
+                <label>
+                    <input type="radio" name="q2" value="a"> Alessandro Manzoni
+                </label>
+                <label>
+                    <input type="radio" name="q2" value="b"> Ugo Foscolo
+                </label>
+                <label>
+                    <input type="radio" name="q2" value="c"> Dante Alighieri
+                </label>
+            </div>
+        </div>
+
+        <button class="submit-btn" onclick="checkAnswers()">Verifica Risposte</button>
+
+        <div class="result" id="quizResult"></div>
+    </div>
+
+    <script>
+        function checkAnswers() {
+            const answers = {
+                q1: "b", // Roma
+                q2: "c"  // Dante Alighieri
+            };
+
+            let score = 0;
+            const quizResult = document.getElementById('quizResult');
+            quizResult.innerHTML = ''; // Pulisce il risultato precedente
+            quizResult.style.display = 'block'; // Mostra il contenitore del risultato
+            quizResult.classList.remove('correct', 'incorrect'); // Rimuove classi precedenti
+
+            // Domanda 1
+            const q1Selected = document.querySelector('input[name="q1"]:checked');
+            if (q1Selected) {
+                if (q1Selected.value === answers.q1) {
+                    score++;
+                }
+            }
+
+            // Domanda 2
+            const q2Selected = document.querySelector('input[name="q2"]:checked');
+            if (q2Selected) {
+                if (q2Selected.value === answers.q2) {
+                    score++;
+                }
+            }
+
+            if (score === Object.keys(answers).length) {
+                quizResult.textContent = `Congratulazioni! Hai risposto correttamente a tutte le domande. Punteggio: ${score}/${Object.keys(answers).length}`;
+                quizResult.classList.add('correct');
+            } else {
+                quizResult.textContent = `Hai risposto correttamente a ${score} domande su ${Object.keys(answers).length}. Riprova!`;
+                quizResult.classList.add('incorrect');
+            }
+        }
+    </script>
+</body>
+</html>

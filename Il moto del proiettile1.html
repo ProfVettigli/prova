@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il moto del proiettile</title>
+    <script type="text/javascript" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        #controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        input[type="range"] {
+            width: 200px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 8px;
+            background: #d3d3d3;
+            outline: none;
+            opacity: 0.7;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            border-radius: 5px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #007bff;
+            cursor: pointer;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #0056b3;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #simulationCanvas {
+            border: 1px solid #333;
+            background-color: #e0f7fa;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        #results {
+            margin-top: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            background-color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #results strong {
+            color: #007bff;
+        }
+        #instructions {
+            margin-top: 10px;
+            font-size: 15px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Il moto di un proiettile</h1>
+
+	<p> 
+		Il lancio di un proiettile, in fisica, è un classico esempio di moto parabolico: un tipo di moto che si svolge simultaneamente in due direzioni, 
+		orizzontale e verticale, generando una traiettoria a forma di parabola.
+	</p>
+
+    <p id="instructions">Regola l'angolo e la velocità, poi clicca "Lancia Proiettile" per vedere la traiettoria.
+	<ul>
+		<li>Riesci a fare in modo che il proiettile tocchi terra esattamente a 50 metri?</li>
+		<li>Riesci a fare in modo che l'altezza massima raggiunta sia di 20 metri?</li>
+		<li>Mantieni la velocità costante e lancia per con angoli di 25, 35, 45, 55 e 65 gradi. Per quale valore
+		il proiettile arriva più lontano?</li>
+	</ul></p>
+    <div id="controls">
+        <div class="control-group">
+            <label for="angle">Angolo di Lancio (\(\theta\)): <span id="angleValue">45</span>°</label>
+            <input type="range" id="angle" min="0" max="90" value="45" oninput="updateAngleValue(this.value)">
+        </div>
+        <div class="control-group">
+            <label for="initialVelocity">Velocità Iniziale (\(v_0\)): <span id="initialVelocityValue">25</span> m/s</label>
+            <input type="range" id="initialVelocity" min="10" max="40" value="25" oninput="updateInitialVelocityValue(this.value)">
+        </div>
+        <button onclick="startSimulation()">Lancia Proiettile</button>
+    </div>
+
+    <canvas id="simulationCanvas" width="800" height="400"></canvas>
+    <div id="results"></div>
+
+    <script>
+        const canvas = document.getElementById('simulationCanvas');
+        const ctx = canvas.getContext('2d');
+        const resultsDiv = document.getElementById('results');
+        const g = 9.81; // Accelerazione di gravità (m/s^2)
+
+        let initialAngle = 45; // gradi
+        let initialVelocity = 25; // m/s
+        
+        // Posizione iniziale fissa (in basso a sinistra del canvas)
+        const startX = 50; 
+        const startY = canvas.height - 50; 
+
+        // Variabili per l'animazione
+        let animationFrameId;
+        let time = 0;
+        let currentTrajectoryPoints = []; // Array per memorizzare i punti della traiettoria corrente
+        const pastTrajectories = [];      // Array di array per memorizzare le traiettorie passate
+        const MAX_PAST_TRAJECTORIES = 3;  // Numero massimo di traiettorie da mantenere
+
+        // Scala per il sistema di riferimento: 1 metro = X pixel.
+        const PIXELS_PER_METER = 5; 
+
+        // Funzione per aggiornare il valore dell'angolo mostrato
+        function updateAngleValue(value) {
+            initialAngle = parseFloat(value);
+            document.getElementById('angleValue').textContent = value;
+        }
+
+        // Funzione per aggiornare il valore della velocità iniziale mostrato
+        function updateInitialVelocityValue(value) {
+            initialVelocity = parseFloat(value);
+            document.getElementById('initialVelocityValue').textContent = value;
+        }
+
+        // Funzione per disegnare gli elementi statici (terra, punto di lancio, sistema di riferimento)
+        function drawStaticElements() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Pulisce l'intero canvas
+            
+            // Disegna la "terra"
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.closePath();
+
+            // Disegna il punto di lancio
+            ctx.beginPath();
+            ctx.arc(startX, startY, 5, 0, Math.PI * 2);
+            ctx.fillStyle = 'red';
+            ctx.fill();
+            ctx.closePath();
+
+            // Disegna il sistema di riferimento
+            drawAxes();
+        }
+
+        // Funzione per disegnare gli assi cartesiani con tacche e numeri
+        function drawAxes() {
+            ctx.strokeStyle = '#666'; // Colore degli assi
+            ctx.lineWidth = 1;
+            ctx.font = '12px Arial';
+            ctx.fillStyle = '#333';
+
+            // Asse X (Orizzontale)
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(canvas.width, startY);
+            ctx.stroke();
+            ctx.closePath();
+            ctx.fillText("x (m)", canvas.width - 40, startY + 20); // Etichetta asse X
+
+            // Asse Y (Verticale)
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, 0); // Va fino in alto
+            ctx.stroke();
+            ctx.closePath();
+            ctx.fillText("y (m)", startX - 20, 15); // Etichetta asse Y
+
+            // Tacche e numeri sull'asse X
+            const xTickInterval = 50; 
+            for (let i = startX + xTickInterval; i < canvas.width; i += xTickInterval) {
+                ctx.beginPath();
+                ctx.moveTo(i, startY - 5);
+                ctx.lineTo(i, startY + 5);
+                ctx.stroke();
+                ctx.closePath();
+                const xValue = (i - startX) / PIXELS_PER_METER; 
+                ctx.fillText(xValue.toFixed(0), i - 10, startY + 20); 
+            }
+
+            // Tacche e numeri sull'asse Y
+            const yTickInterval = 50; 
+            for (let i = startY - yTickInterval; i > 0; i -= yTickInterval) {
+                ctx.beginPath();
+                ctx.moveTo(startX - 5, i);
+                ctx.lineTo(startX + 5, i);
+                ctx.stroke();
+                ctx.closePath();
+                const yValue = (startY - i) / PIXELS_PER_METER; 
+                ctx.fillText(yValue.toFixed(0), startX - 30, i + 5); 
+            }
+            
+            // Origine
+            ctx.fillText("0", startX - 20, startY + 20);
+        }
+
+        // Funzione per disegnare una singola traiettoria
+        function drawSingleTrajectory(points, color) {
+            if (points.length > 1) {
+                ctx.beginPath();
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+
+        // Funzione per disegnare tutte le traiettorie memorizzate
+        function drawAllTrajectories() {
+            // Colori diversi per distinguere le traiettorie passate
+            const colors = ['rgba(0, 0, 255, 0.2)', 'rgba(0, 0, 255, 0.35)', 'rgba(0, 0, 255, 0.5)']; 
+            
+            // Disegna le traiettorie passate, dalla più vecchia alla più recente (colori più chiari a più scuri)
+            for (let i = 0; i < pastTrajectories.length; i++) {
+                drawSingleTrajectory(pastTrajectories[i], colors[i % colors.length]); // Usa modulo per ciclicità colori
+            }
+            // Disegna la traiettoria corrente con un colore più marcato
+            drawSingleTrajectory(currentTrajectoryPoints, 'blue'); 
+        }
+
+        // Funzione per calcolare la posizione del proiettile
+        function calculateProjectilePosition(time) {
+            const angleRad = (initialAngle * Math.PI) / 180; 
+            const x = initialVelocity * Math.cos(angleRad) * time;
+            const y = (initialVelocity * Math.sin(angleRad) * time) - (0.5 * g * time * time);
+            return { x, y };
+        }
+
+        // Funzione per disegnare il proiettile
+        function drawProjectile(xCanvas, yCanvas) {
+            ctx.beginPath();
+            ctx.arc(xCanvas, yCanvas, 7, 0, Math.PI * 2);
+            ctx.fillStyle = 'red'; // Colore del proiettile corrente
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        // Funzione di animazione
+        function animate() {
+            drawStaticElements(); // Ridisegna elementi statici
+            drawAllTrajectories(); // Disegna tutte le traiettorie
+
+            const { x, y } = calculateProjectilePosition(time);
+
+            // Mappa le coordinate del mondo reale a quelle del canvas
+            const xCanvas = startX + (x * PIXELS_PER_METER);
+            const yCanvas = startY - (y * PIXELS_PER_METER);
+
+            // Aggiungi il punto corrente alla traiettoria corrente
+            currentTrajectoryPoints.push({ x: xCanvas, y: yCanvas });
+
+            // Disegna il proiettile solo se è ancora sopra la "terra" e dentro i limiti del canvas
+            if (yCanvas < canvas.height - 2 && xCanvas < canvas.width && xCanvas > 0) { 
+                drawProjectile(xCanvas, yCanvas);
+                time += 0.05; 
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                // Proiettile atterrato o uscito dai limiti del canvas
+                cancelAnimationFrame(animationFrameId);
+                // Disegna l'ultima posizione del proiettile prima di fermarsi
+                drawProjectile(xCanvas, Math.min(yCanvas, canvas.height - 2)); 
+                
+                // Salva la traiettoria corrente nell'array delle traiettorie passate
+                pastTrajectories.push(currentTrajectoryPoints);
+                // Se abbiamo più di MAX_PAST_TRAJECTORIES, rimuovi la più vecchia
+                if (pastTrajectories.length > MAX_PAST_TRAJECTORIES) {
+                    pastTrajectories.shift(); // Rimuove il primo elemento (il più vecchio)
+                }
+
+                displayResults();
+            }
+        }
+
+        // Funzione per avviare la simulazione
+        function startSimulation() {
+            cancelAnimationFrame(animationFrameId); // Ferma qualsiasi animazione precedente
+            time = 0; // Resetta il tempo
+            currentTrajectoryPoints = []; // Svuota la traiettoria corrente
+            resultsDiv.textContent = ''; // Pulisce i risultati precedenti
+            animate(); // Avvia la nuova animazione
+        }
+
+        // Funzione per visualizzare i risultati finali
+        function displayResults() {
+            const angleRad = (initialAngle * Math.PI) / 180;
+
+            const flightTime = (2 * initialVelocity * Math.sin(angleRad)) / g;
+            const range = initialVelocity * Math.cos(angleRad) * flightTime;
+            const maxHeight = (initialVelocity * initialVelocity * Math.sin(angleRad) * Math.sin(angleRad)) / (2 * g);
+
+            resultsDiv.innerHTML = `
+                Distanza percorsa (Gittata): <strong>${range.toFixed(2)} m</strong><br>
+                Altezza massima raggiunta: <strong>${maxHeight.toFixed(2)} m</strong><br>
+                Tempo di volo: <strong>${flightTime.toFixed(2)} s</strong>
+            `;
+            if (typeof MathJax !== 'undefined') {
+                MathJax.typesetPromise();
+            }
+        }
+
+        // Inizializza il canvas quando la pagina viene caricata
+        window.onload = drawStaticElements;
+    </script>
+	
+	<h2>Cosa saprai fare alla fine di questa lezione</h2>
+		<ul>
+			<li>Saprai prevedere la traiettoria di un proiettile </li>
+			<li>Saprai evitare i proiettili che ti vengono scagliati addosso</li>
+			<li>Narrare brevi rappresentazioni allegoriche per comunicare un insegnamento religioso</li>
+		</ul>
+	
+	<h2>Cosa devi sapere prima di iniziare questa lezione</h2>
+	
+		<ul>
+			<li>Moto rettilineo uniforme (aggiungere hlink)</li>
+			<li>Moto uniformemente accelerato</li>
+			<li>Principio di sovrapposizione</li>
+			<li>Funzioni trigonometriche seno e coseno</li>
+			<li>Tirare le punizioni</li>
+		</ul>
+	
+ <h3>Descrizione del moto</h3>
+  <ul>
+    <li>
+      Quando un proiettile viene lanciato con una certa velocità iniziale che forma un angolo \(\alpha\) rispetto all’orizzontale, il suo movimento può essere 
+	  scomposto in due componenti indipendenti:
+      <ul>
+        <li>
+          <strong>Moto orizzontale (asse X):</strong> è un moto rettilineo uniforme, cioè avviene con velocità costante perché non ci sono forze (se si trascura l’attrito dell’aria) che agiscono in questa direzione.
+        </li>
+        <li>
+          <strong>Moto verticale (asse Y):</strong> è un moto rettilineo uniformemente accelerato, cioè il proiettile subisce l’accelerazione di gravità \(g\) diretta verso il basso, che modifica la sua velocità verticale nel tempo.
+        </li>
+      </ul>
+    </li>
+	Immagina, ad esempio, un arciere elfico che deve colpire un Orco. Quanto più tende la freccia, tanto più veloce quest'ultima partirà.
+	Allo stesso tempo, se alza troppo la mira potrebbe non coplire l'orco perchè la freccia va troppo lontano. Quanto più "alza la mira" tanto maggiore
+	è l'angolo di lancio".
+  </ul>
+
+  <h3>Fasi del moto</h3>
+  <ol>
+    <li>All’inizio, il proiettile sale con velocità verticale positiva.</li>
+    <li>Raggiunge un punto di massima altezza dove la velocità verticale si annulla.</li>
+    <li>Poi scende, accelerato dalla gravità, fino a toccare il suolo.</li>
+  </ol>
+  
+  <h3>Sintesi</h3>
+  <p>
+    Il moto di un proiettile è la combinazione di un moto rettilineo uniforme orizzontale e di un moto uniformemente accelerato verticale,
+	risultando in una traiettoria parabolica. Le grandezze fondamentali che lo descrivono sono la velocità iniziale, l’angolo di lancio, la gittata 
+	ovvero quanto lontano arriva un proiettile e l’altezza massima.
+  </p>
+	
+		<h2>Formulario</h2>
+		<h3>Componenti della velocità iniziale</h3>
+		<ul>
+			<li><strong>Componente orizzontale:</strong> \[ v_{0x} = v_0 \cos\alpha \]</li>
+			<li><strong>Componente verticale:</strong> \[ v_{0y} = v_0 \sin\alpha \]</li>
+		</ul>
+	  <h3>Equazioni del moto</h3>
+  <ul>
+    <li><strong>Posizione orizzontale:</strong> \[ x = v_{0x} t \]</li>
+    <li><strong>Posizione verticale:</strong> \[ y = v_{0y} t - \frac{1}{2} g t^2 \]</li>
+    <li>
+      <strong>Traiettoria parabolica:</strong>
+      \[
+        y = x \tan\alpha - \frac{g x^2}{2 (v_0 \cos\alpha)^2}
+      \]
+    </li>
+  </ul>
+  <h3>Gittata e altezza massima</h3>
+  <ul>
+    <li>
+      <strong>Gittata (R):</strong>
+      \[
+        R = \frac{v_0^2 \sin 2\alpha}{g}
+      \]
+    </li>
+    <li>
+      <strong>Altezza massima (H):</strong>
+      \[
+        H_{max} = \frac{(v_0 \sin\alpha)^2}{2g}
+      \]
+    </li>
+  </ul>
+	
+	<h2>Quiz</h2>
+	
+	<h2>Quiz: Il moto del proiettile</h2>
+  <form id="quizForm">
+    <div class="question">
+      <p>1. Qual è la traiettoria seguita da un proiettile lanciato in un campo gravitazionale uniforme?</p>
+      <label><input type="radio" name="q1" value="a"> Una retta</label><br>
+      <label><input type="radio" name="q1" value="b"> Una parabola</label><br>
+      <label><input type="radio" name="q1" value="c"> Un cerchio</label><br>
+      <label><input type="radio" name="q1" value="d"> Un'ellisse</label>
+    </div>
+    <div class="question">
+      <p>2. Quale delle seguenti affermazioni è vera sul moto del proiettile?</p>
+      <label><input type="radio" name="q2" value="a"> Il moto orizzontale è uniformemente accelerato</label><br>
+      <label><input type="radio" name="q2" value="b"> Il moto verticale è rettilineo uniforme</label><br>
+      <label><input type="radio" name="q2" value="c"> Il moto orizzontale è rettilineo uniforme</label><br>
+      <label><input type="radio" name="q2" value="d"> Il moto verticale è circolare</label>
+    </div>
+    <div class="question">
+      <p>3. Quando la gittata di un proiettile è massima?</p>
+      <label><input type="radio" name="q3" value="a"> Quando l'angolo di lancio è 90°</label><br>
+      <label><input type="radio" name="q3" value="b"> Quando l'angolo di lancio è 0°</label><br>
+      <label><input type="radio" name="q3" value="c"> Quando l'angolo di lancio è 45°</label><br>
+      <label><input type="radio" name="q3" value="d"> Quando l'angolo di lancio è 60°</label>
+    </div>
+    <div class="question">
+      <p>4. Quale forza agisce su un proiettile in volo (trascurando l'aria)?</p>
+      <label><input type="radio" name="q4" value="a"> Solo la forza di gravità</label><br>
+      <label><input type="radio" name="q4" value="b"> La forza centrifuga</label><br>
+      <label><input type="radio" name="q4" value="c"> La forza di attrito</label><br>
+      <label><input type="radio" name="q4" value="d"> Nessuna forza</label>
+    </div>
+    <div class="question">
+      <p>5. Qual è la componente orizzontale della velocità iniziale di un proiettile lanciato con velocità \(v_0\) e angolo \(\alpha\)?</p>
+      <label><input type="radio" name="q5" value="a"> \(v_0 \sin\alpha\)</label><br>
+      <label><input type="radio" name="q5" value="b"> \(v_0 \cos\alpha\)</label><br>
+      <label><input type="radio" name="q5" value="c"> \(v_0 \tan\alpha\)</label><br>
+      <label><input type="radio" name="q5" value="d"> \(\frac{v_0}{\cos\alpha}\)</label>
+    </div>
+    <button type="button" onclick="correggi()">Correggi</button>
+  </form>
+  <div id="result" class="feedback"></div>
+
+  <script>
+    function correggi() {
+      // Risposte corrette
+      const risposte = {
+        q1: "b",
+        q2: "c",
+        q3: "c",
+        q4: "a",
+        q5: "b"
+      };
+      let punti = 0;
+      let totali = 5;
+      let feedback = "";
+
+      for (let i = 1; i <= totali; i++) {
+        let domanda = document.querySelector('input[name="q'+i+'"]:checked');
+        if (domanda && domanda.value === risposte["q"+i]) {
+          punti++;
+        }
+      }
+
+      if (punti === totali) {
+        feedback = "<span class='correct'>Ottimo! Hai risposto correttamente a tutte le domande ("+punti+"/"+totali+").</span>";
+      } else {
+        feedback = "<span class='wrong'>Hai risposto correttamente a "+punti+" su "+totali+" domande. Riprova!</span>";
+      }
+
+      document.getElementById("result").innerHTML = feedback;
+      if(window.MathJax) MathJax.typesetPromise();
+    }
+  </script>
+
+</body>
+</html>
