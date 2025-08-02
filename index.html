@@ -1,17 +1,245 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Ciao, sito di prova</title>
-  </head>
-  <body>
-    <h1>Ciao</h1>
-    <p>Sito di prova.</p>
-    <ul>
-    <li><a href="https://profvettigli.github.io/prova/Logica%20-%20le%20proposizioni.html">Logica 1 - Le proposizioni</a></li>
-   <li> <a href="https://profvettigli.github.io/prova/Il%20moto%20del%20proiettile1.html">Il moto del proiettile</a></li>
-    <li> <a href="https://profvettigli.github.io/prova/grafico.html">Grafico</a></li>
-    <li> <a href="https://profvettigli.github.io/prova/math.html">Math</a></li>
-    <li> <a href="https://profvettigli.github.io/prova/quiz.html">Quiz</a></li>
-    </ul>
-  </body>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Il Moto del Proiettile - Presentazione Interattiva</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header principale -->
+    <header class="main-header">
+        <div class="container">
+            <h1 class="main-title">Il Moto del Proiettile</h1>
+            <p class="subtitle">Presentazione Interattiva</p>
+            
+            <!-- Navigazione -->
+            <nav class="main-nav">
+                <button class="nav-btn active" data-section="teoria">
+                    <span class="nav-icon">📚</span>
+                    Teoria
+                </button>
+                <button class="nav-btn" data-section="quiz">
+                    <span class="nav-icon">🧠</span>
+                    Quiz
+                </button>
+                <button class="nav-btn" data-section="simulatore">
+                    <span class="nav-icon">🚀</span>
+                    Simulatore
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Sezione Teoria -->
+        <section id="teoria" class="content-section active">
+            <div class="container">
+                <div class="theory-content">
+                    <div class="theory-card">
+                        <h2>Definizione</h2>
+                        <p>Il moto parabolico, noto anche come moto del proiettile, è un moto bidimensionale che avviene simultaneamente in due direzioni: orizzontale e verticale, creando una traiettoria parabolica.</p>
+                    </div>
+
+                    <div class="theory-card">
+                        <h2>Principi Fondamentali</h2>
+                        <ul class="principles-list">
+                            <li>Il proiettile è soggetto solo alla forza di gravità (trascuriamo l'attrito dell'aria)</li>
+                            <li>Il moto si scompone in due moti indipendenti:
+                                <ul>
+                                    <li>Moto rettilineo uniforme lungo l'asse orizzontale (x)</li>
+                                    <li>Moto uniformemente accelerato lungo l'asse verticale (y)</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h2>Equazioni Principali</h2>
+                        <div class="equations-grid">
+                            <div class="equation-group">
+                                <h3>Componenti velocità iniziale</h3>
+                                <div class="equation">v₀ₓ = v₀ · cos(α)</div>
+                                <div class="equation">v₀ᵧ = v₀ · sin(α)</div>
+                            </div>
+                            
+                            <div class="equation-group">
+                                <h3>Leggi orarie</h3>
+                                <div class="equation">x(t) = v₀ₓ · t</div>
+                                <div class="equation">y(t) = v₀ᵧ · t - ½ · g · t²</div>
+                            </div>
+                            
+                            <div class="equation-group">
+                                <h3>Velocità</h3>
+                                <div class="equation">vₓ(t) = v₀ₓ (costante)</div>
+                                <div class="equation">vᵧ(t) = v₀ᵧ - g · t</div>
+                            </div>
+                            
+                            <div class="equation-group">
+                                <h3>Parametri caratteristici</h3>
+                                <div class="equation">Gittata: R = (v₀² · sin(2α))/g</div>
+                                <div class="equation">Altezza max: hₘₐₓ = (v₀² · sin²(α))/(2g)</div>
+                                <div class="equation">Tempo volo: t = (2 · v₀ · sin(α))/g</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theory-card">
+                        <h2>Parametri Importanti</h2>
+                        <div class="parameters-grid">
+                            <div class="parameter">
+                                <h4>Velocità iniziale (v₀)</h4>
+                                <p>Velocità con cui viene lanciato il proiettile [m/s]</p>
+                            </div>
+                            <div class="parameter">
+                                <h4>Angolo di lancio (α)</h4>
+                                <p>Angolo rispetto all'orizzontale [°]. Gittata massima a 45°</p>
+                            </div>
+                            <div class="parameter">
+                                <h4>Altezza iniziale (h₀)</h4>
+                                <p>Altezza da cui viene lanciato il proiettile [m]</p>
+                            </div>
+                            <div class="parameter">
+                                <h4>Accelerazione di gravità (g)</h4>
+                                <p>g = 9.81 m/s² - Accelerazione di gravità terrestre</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grafico illustrativo -->
+                    <div class="theory-card">
+                        <h2>Rappresentazione Grafica</h2>
+                        <div class="trajectory-demo">
+                            <canvas id="theory-canvas" width="600" height="300"></canvas>
+                            <p class="demo-caption">Esempio di traiettoria parabolica con diversi angoli di lancio</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sezione Quiz -->
+        <section id="quiz" class="content-section">
+            <div class="container">
+                <div class="quiz-container">
+                    <div class="quiz-header">
+                        <h2>Quiz di Comprensione</h2>
+                        <div class="quiz-progress">
+                            <span class="progress-text">Domanda <span id="current-question">1</span> di <span id="total-questions">8</span></span>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                        </div>
+                        <div class="score-display">
+                            Punteggio: <span id="current-score">0</span>/8
+                        </div>
+                    </div>
+
+                    <div class="quiz-content">
+                        <div class="question-card" id="question-card">
+                            <!-- Le domande verranno inserite dinamicamente -->
+                        </div>
+
+                        <div class="quiz-controls">
+                            <button class="btn btn--primary" id="next-question" style="display: none;">
+                                Prossima Domanda
+                            </button>
+                            <button class="btn btn--secondary" id="restart-quiz" style="display: none;">
+                                Ricomincia Quiz
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Schermata finale -->
+                    <div class="quiz-results" id="quiz-results" style="display: none;">
+                        <h3>Quiz Completato!</h3>
+                        <div class="final-score">
+                            <span class="score-number" id="final-score">0</span>/8
+                        </div>
+                        <div class="score-comment" id="score-comment"></div>
+                        <button class="btn btn--primary" id="restart-quiz-final">Ricomincia Quiz</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sezione Simulatore -->
+        <section id="simulatore" class="content-section">
+            <div class="container">
+                <div class="simulator-layout">
+                    <!-- Pannello controlli -->
+                    <div class="controls-panel">
+                        <h2>Controlli Simulazione</h2>
+                        
+                        <!-- Parametri -->
+                        <div class="control-group">
+                            <label class="form-label">Velocità Iniziale: <span id="velocity-value">20</span> m/s</label>
+                            <input type="range" id="velocity-slider" class="slider" min="5" max="100" value="20" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label class="form-label">Angolo di Lancio: <span id="angle-value">45</span>°</label>
+                            <input type="range" id="angle-slider" class="slider" min="0" max="90" value="45" step="1">
+                        </div>
+
+                        <div class="control-group">
+                            <label class="form-label">Altezza Iniziale: <span id="height-value">0</span> m</label>
+                            <input type="range" id="height-slider" class="slider" min="0" max="50" value="0" step="0.5">
+                        </div>
+
+                        <!-- Esempi preimpostati -->
+                        <div class="presets">
+                            <h3>Esempi Preimpostati</h3>
+                            <button class="btn btn--outline preset-btn" data-preset="basket">🏀 Basket</button>
+                            <button class="btn btn--outline preset-btn" data-preset="cannon">💣 Cannone</button>
+                            <button class="btn btn--outline preset-btn" data-preset="water">💧 Getto d'acqua</button>
+                        </div>
+
+                        <!-- Pulsante lancio -->
+                        <button class="btn btn--primary btn--full-width" id="launch-btn">🚀 Lancia!</button>
+                        
+                        <!-- Statistiche -->
+                        <div class="stats-panel">
+                            <h3>Dati in Tempo Reale</h3>
+                            <div class="stat-item">
+                                <span class="stat-label">Posizione:</span>
+                                <span class="stat-value" id="position-display">x: 0 m, y: 0 m</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Velocità:</span>
+                                <span class="stat-value" id="velocity-display">0 m/s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Tempo:</span>
+                                <span class="stat-value" id="time-display">0 s</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Gittata:</span>
+                                <span class="stat-value" id="range-display">0 m</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Alt. Max:</span>
+                                <span class="stat-value" id="max-height-display">0 m</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Canvas simulazione -->
+                    <div class="simulation-panel">
+                        <h2>Simulazione Traiettoria</h2>
+                        <div class="canvas-container">
+                            <canvas id="simulation-canvas" width="800" height="500"></canvas>
+                        </div>
+                        <div class="simulation-controls">
+                            <button class="btn btn--secondary" id="pause-btn" style="display: none;">⏸️ Pausa</button>
+                            <button class="btn btn--secondary" id="reset-btn">🔄 Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
 </html>
